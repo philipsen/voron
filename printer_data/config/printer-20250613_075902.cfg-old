@@ -1,0 +1,818 @@
+[include mmu/addons/blobifier.cfg]
+[include mmu/addons/mmu_erec_cutter.cfg]
+[include mmu/base/*.cfg]
+[include mmu/optional/client_macros.cfg]
+# This file contains common pin mappings for the LDO Voron 2.4 Rev. D kit
+# See docs/Config_Reference.md for a description of parameters.
+
+## Voron Design VORON 2.4 250/300/350mm Leviathan V1.1 + Nitehawk-SB config
+
+[include mainsail.cfg]
+[include nozzle-scrub.cfg]
+#[include klicky-probe.cfg]
+[include bigtreetech-eddy.cfg]
+[include KAMP_Settings.cfg]
+
+[exclude_object]
+
+## *** THINGS TO CHANGE/CHECK: ***
+## MCU paths                            [mcu] section
+## Thermistor types                     [extruder] and [heater_bed] sections - See https://www.klipper3d.org/Config_Reference.html#common-thermistors for common thermistor types
+## Z Endstop Switch location            [safe_z_home] section
+## Homing end position                  [gcode_macro G32] section
+## Z Endstop Switch  offset for Z0      [stepper_z] section
+## Probe points                         [quad_gantry_level] section
+## Min & Max gantry corner postions     [quad_gantry_level] section
+## PID tune                             [extruder] and [heater_bed] sections
+## Probe pin                            [probe] section
+## Fine tune E steps                    [extruder] section
+
+[mcu]
+##  Obtain definition by "ls -l /dev/serial/by-id/" then unplug to verify
+##--------------------------------------------------------------------
+serial: /dev/serial/by-id/usb-Klipper_stm32f446xx_39003F000251303532383235-if00
+restart_method: command
+##--------------------------------------------------------------------
+
+[mcu nhk]
+##  Obtain definition by "ls -l /dev/serial/by-id/" then unplug to verify
+##--------------------------------------------------------------------
+serial: /dev/serial/by-id/usb-Klipper_rp2040_4E363334320B267D-if00    # new
+#serial: /dev/serial/by-id/usb-Klipper_rp2040_3033393834041284-if00    # original
+restart_method: command
+##--------------------------------------------------------------------
+
+[input_shaper]
+shaper_freq_x: 54.8
+shaper_type_x: mzv
+shaper_freq_y: 38.2
+shaper_type_y: mzv
+
+[printer]
+kinematics: corexy
+max_velocity: 300  
+max_accel: 4000
+max_z_velocity: 15          #Max 15 for 12V TMC Drivers, can increase for 24V
+max_z_accel: 350
+square_corner_velocity: 5.0
+
+
+
+#####################################################################
+#   X/Y Stepper Settings
+#####################################################################
+
+##  B Stepper - Left
+##  Connected to HV STEPPER 0
+##  Endstop connected to X-ENDSTOP
+[stepper_x]
+step_pin: PB10
+dir_pin: !PB11
+enable_pin: !PG0
+rotation_distance: 40
+microsteps: 32
+full_steps_per_rotation:400  #set to 200 for 1.8 degree stepper
+endstop_pin: PC1
+position_min: 0
+##--------------------------------------------------------------------
+
+##  Uncomment below for 250mm build
+#position_endstop: 250
+#position_max: 250
+
+##  Uncomment for 300mm build
+#position_endstop: 300
+#position_max: 300
+
+##  Uncomment for 350mm build
+position_endstop: 350
+position_max: 350
+
+##--------------------------------------------------------------------
+homing_speed: 25   #Max 100
+homing_retract_dist: 5
+homing_positive_dir: true
+
+##  Make sure to update below for your relevant driver (2209 or 5160)
+[tmc5160 stepper_x]
+cs_pin: PE15
+spi_bus: spi4
+#diag0_pin: ^!PG1
+interpolate: false
+run_current: 0.8
+sense_resistor: 0.075
+stealthchop_threshold: 0
+
+##  A Stepper - Right
+##  Connected to HV STEPPER 1
+##  Endstop connected to Y-ENDSTOP
+[stepper_y]
+step_pin: PF15
+dir_pin: !PF14
+enable_pin: !PE9
+rotation_distance: 40
+microsteps: 32
+full_steps_per_rotation:400  #set to 200 for 1.8 degree stepper
+endstop_pin: PC2
+position_min: 0
+##--------------------------------------------------------------------
+
+##  Uncomment for 250mm build
+#position_endstop: 250
+#position_max: 250
+
+##  Uncomment for 300mm build
+#position_endstop: 300
+#position_max: 300
+
+##  Uncomment for 350mm build
+position_endstop: 350
+position_max: 350
+
+##--------------------------------------------------------------------
+homing_speed: 25  #Max 100
+homing_retract_dist: 5
+homing_positive_dir: true
+
+##  Make sure to update below for your relevant driver (2209 or 5160)
+[tmc5160 stepper_y]
+cs_pin: PE11
+spi_bus: spi4
+#diag0_pin: ^!PE10
+interpolate: false
+run_current: 0.8
+sense_resistor: 0.075
+stealthchop_threshold: 0
+ 
+#####################################################################
+#   Z Stepper Settings
+#####################################################################
+
+## Z0 Stepper - Front Left
+##  Connected to STEPPER 0
+##  Endstop connected to Z-ENDSTOP
+[stepper_z]
+step_pin: PD4
+dir_pin: !PD3
+enable_pin: !PD7
+rotation_distance: 40
+gear_ratio: 80:16  
+microsteps: 32
+endstop_pin: PC3
+##  Z-position of nozzle (in mm) to z-endstop trigger point relative to print surface (Z0)
+##  (+) value = endstop above Z0, (-) value = endstop below
+##  Increasing position_endstop brings nozzle closer to the bed
+##  After you run Z_ENDSTOP_CALIBRATE, position_endstop will be stored at the very end of your config
+#position_endstop: -0.5
+##--------------------------------------------------------------------
+
+##  Uncomment below for 250mm build
+#position_max: 230
+
+##  Uncomment below for 300mm build
+#position_max: 280
+
+##  Uncomment below for 350mm build
+position_max: 330
+
+##--------------------------------------------------------------------
+position_min: -5
+homing_speed: 8
+second_homing_speed: 3
+homing_retract_dist: 3
+
+##  Make sure to update below for your relevant driver (2209 or 5160)
+[tmc2209 stepper_z]
+uart_pin: PD5
+#diag_pin: ^!PD6
+interpolate: false
+run_current: 0.8
+sense_resistor: 0.110
+stealthchop_threshold: 0
+
+##  Z1 Stepper - Rear Left
+##  Connected to STEPPER 1
+[stepper_z1]
+step_pin: PC12
+dir_pin: PC11
+enable_pin: !PD2
+rotation_distance: 40
+gear_ratio: 80:16 
+microsteps: 32
+
+##  Make sure to update below for your relevant driver (2209 or 5160)
+[tmc2209 stepper_z1]
+uart_pin: PD0
+#diag_pin: ^!PD1
+interpolate: false
+run_current: 0.8
+sense_resistor: 0.110
+stealthchop_threshold: 0
+
+##  Z2 Stepper - Rear Right
+##  Connected to STEPPER 2
+[stepper_z2]
+step_pin: PC9
+dir_pin: !PC8
+enable_pin: !PC10
+rotation_distance: 40
+gear_ratio: 80:16 
+microsteps: 32
+
+##  Make sure to update below for your relevant driver (2209 or 5160)
+[tmc2209 stepper_z2]
+uart_pin: PA8
+#diag_pin: ^!PA15
+interpolate: false
+run_current: 0.8
+sense_resistor: 0.110
+stealthchop_threshold: 0
+
+##  Z3 Stepper - Front Right
+##  Connected to STEPPER 3
+[stepper_z3]
+step_pin: PG7
+dir_pin: PG6
+enable_pin: !PC7
+rotation_distance: 40
+gear_ratio: 80:16 
+microsteps: 32
+
+##  Make sure to update below for your relevant driver (2209 or 5160)
+[tmc2209 stepper_z3]
+uart_pin: PG8
+#diag_pin: ^!PC6
+interpolate: false
+run_current: 0.8
+sense_resistor: 0.110
+stealthchop_threshold: 0
+
+[gcode_macro ZUP]
+gcode:
+    SET_GCODE_OFFSET Z_ADJUST=0.01 MOVE=1
+
+[gcode_macro ZDOWN]
+gcode:
+    SET_GCODE_OFFSET Z_ADJUST=-0.01 MOVE=1
+    
+#####################################################################
+#   Extruder
+#####################################################################
+
+##  Connected to STEPPER 0
+##  Heater - HEATER
+##  Thermistor - TH0
+[extruder]
+step_pin: nhk:gpio23
+dir_pin: nhk:gpio24
+enable_pin: !nhk:gpio25
+#step_pin: PD10
+#dir_pin: PD9
+#enable_pin: !PD13
+##  Update value below when you perform extruder calibration
+##  If you ask for 100mm of filament, but in reality it is 98mm:
+##  rotation_distance = <previous_rotation_distance> * <actual_extrude_distance> / 100
+##  22.6789511 is a good starting point
+rotation_distance: 22.6789511   #Bondtech 5mm Drive Gears
+##  Update Gear Ratio depending on your Extruder Type
+##  Use 50:10 for Stealthburner/Clockwork 2
+##  Use 50:17 for Afterburner/Clockwork (BMG Gear Ratio)
+##  Use 80:20 for M4, M3.1
+gear_ratio: 50:10               #BMG Gear Ratio
+microsteps: 32
+full_steps_per_rotation: 200    #200 for 1.8 degree, 400 for 0.9 degree
+nozzle_diameter: 0.400
+filament_diameter: 1.75
+heater_pin: nhk:gpio9
+## Check what thermistor type you have. See https://www.klipper3d.org/Config_Reference.html#common-thermistors for common thermistor types.
+## Use "Generic 3950" for NTC 100k 3950 thermistors
+sensor_type: ATC Semitec 104NT-4-R025H42G
+sensor_pin: nhk:gpio29
+pullup_resistor: 2200
+min_temp: 10
+max_temp: 270
+max_power: 1.0
+# min_extrude_temp: 170
+min_extrude_temp: 190
+#control = pid
+#pid_kp = 26.213
+#pid_ki = 1.304
+#pid_kd = 131.721
+##  Try to keep pressure_advance below 1.0
+#pressure_advance: 0.05
+##  Default is 0.040, leave stock
+#pressure_advance_smooth_time: 0.040
+max_extrude_cross_section: 5
+
+##  E0 on MOTOR6
+##  Connected to STEPPER 4
+[tmc2209 extruder]
+uart_pin: nhk:gpio0
+tx_pin: nhk:gpio1
+#uart_pin: PD11
+#tx_pin: PD12
+interpolate: false
+run_current: 0.5
+sense_resistor: 0.100
+stealthchop_threshold: 0
+
+
+#####################################################################
+#   Bed Heater
+#####################################################################
+
+[heater_bed]
+##  SSR Pin - HEATBED
+##  Thermistor - TH1
+heater_pin: PG11
+sensor_type: ATC Semitec 104NT-4-R025H42G
+sensor_pin: PA2
+pullup_resistor: 2200
+##  Adjust Max Power so your heater doesn't warp your bed. Rule of thumb is 0.4 watts / cm^2 .
+max_power: 0.6
+min_temp: 0
+max_temp: 130
+#control: pid
+#pid_kp: 58.437
+#pid_ki: 2.347
+#pid_kd: 363.769
+
+#####################################################################
+#   Probe
+#####################################################################
+
+# [probe]
+# ##  Inductive Probe
+# ##  Connected to Z-PROBE
+# ##  This probe is not used for Z height, only Quad Gantry Leveling
+# pin: nhk:gpio10
+# x_offset: 0
+# y_offset: 25.0
+# #z_offset: 0
+# speed: 10.0
+# samples: 3
+# samples_result: median
+# sample_retract_dist: 3.0
+# samples_tolerance: 0.006
+# samples_tolerance_retries: 3
+
+#####################################################################
+#   Fan Control
+#####################################################################
+
+[fan]
+##  Print Cooling Fan - FAN0
+pin: nhk:gpio6
+##tachometer_pin: PB0
+kick_start_time: 0.5
+##  Depending on your fan, you may need to increase this value
+##  if your fan will not start. Can change cycle_time (increase)
+##  if your fan is not able to slow down effectively
+off_below: 0.10
+
+[heater_fan hotend_fan]
+##  Hotend Fan - FAN1
+pin: nhk:gpio5
+#tachometer_pin: PB4
+max_power: 1.0
+kick_start_time: 0.5
+heater: extruder
+heater_temp: 50.0
+##  If you are experiencing back flow, you can reduce fan_speed
+#fan_speed: 1.0
+
+[controller_fan controller_fan]
+#  Controller fan - FAN2
+pin: PF7
+#tachometer_pin: PF6
+kick_start_time: 0.5
+heater: heater_bed
+fan_speed: 0.5
+
+#[heater_fan exhaust_fan]
+[fan_generic exhaust_fan]
+##  Exhaust fan - FAN3
+pin: PF9
+#tachometer_pin: PF8
+#max_power: 1.0
+#shutdown_speed: 0.0
+kick_start_time: 5.0
+#heater: heater_bed
+#heater_temp: 60
+#fan_speed: 1
+
+[fan_generic nevermore]
+# nevermore filter
+pin: PB3
+kick_start_time: 0.5  #off_below: 0.1
+
+#####################################################################
+#   Filament sensor
+#####################################################################
+
+#[filament_switch_sensor Filament]
+#pause_on_runout: True
+#runout_gcode: M600
+#insert_gcode:
+#event_delay: 3.0
+#pause_delay: 0.5
+#switch_pin: !PC0
+
+#####################################################################
+#   LED Control
+#####################################################################
+
+## Chamber Lighting (Optional)
+## Connected to LED-STRIP
+[output_pin caselight]
+pin: PE6
+pwm:true
+hardware_pwm: False
+value: 1 #startup value
+shutdown_value: 0
+#value:1
+cycle_time: 0.00025
+
+## Connected to led (nitehawk sb)
+[output_pin pcb_led]
+pin: !nhk:gpio8
+
+## Connected to NEOPIXEL (nitehawk sb)
+[neopixel rgb_light]
+pin: nhk:gpio7
+#pin: PF10
+chain_count: 3
+color_order: GRBW
+initial_RED: 0.7
+initial_GREEN: 0.7
+initial_BLUE: 1
+initial_WHITE: 1
+
+#[output_pin pix]
+#pin: nhk:gpio7
+
+
+#####################################################################
+#   Accelerometer
+#####################################################################
+[adxl345]
+cs_pin: nhk:gpio21
+spi_software_sclk_pin: nhk:gpio18
+spi_software_mosi_pin: nhk:gpio20
+spi_software_miso_pin: nhk:gpio19
+
+[resonance_tester]
+accel_chip: adxl345
+probe_points:
+    175, 175, 20
+
+
+#####################################################################
+#   TH
+# #####################################################################
+[temperature_sensor chamber_temp]
+## Chamber Temperature - T1
+sensor_type: ATC Semitec 104NT-4-R025H42G
+sensor_pin: nhk:gpio28
+min_temp: 0
+max_temp: 100
+gcode_id: chamber_th
+
+[thermistor CMFB103F3950FANT]
+temperature1: 0.0
+resistance1: 32116.0
+temperature2: 40.0
+resistance2: 5309.0
+temperature3: 80.0
+resistance3: 1228.0
+
+[temperature_sensor nh_temp]
+## Nitehawk PCB Sensor
+sensor_type: CMFB103F3950FANT
+sensor_pin: nhk:gpio26
+pullup_resistor: 2200
+min_temp: 0
+max_temp: 100
+gcode_id: nh_th
+
+#####################################################################
+#   Homing and Gantry Adjustment Routines
+#####################################################################
+
+[idle_timeout]
+timeout: 1800
+
+[safe_z_home]
+##  XY Location of the Z Endstop Switch
+##  Update -10,-10 to the XY coordinates of your endstop pin 
+##  (such as 157,305) after going through Z Endstop Pin
+##  Location Definition step.
+home_xy_position:234,350
+speed:100
+z_hop:10
+
+
+##  Use QUAD_GANTRY_LEVEL to level a gantry.
+##  Min & Max gantry corners - measure from nozzle at MIN (0,0) and 
+##  MAX (250, 250), (300,300), or (350,350) depending on your printer size
+##  to respective belt positions
+[quad_gantry_level]
+
+#--------------------------------------------------------------------
+##  Gantry Corners for 250mm Build
+##  Uncomment for 250mm build
+#gantry_corners:
+#   -60,-10
+#   310, 320
+##  Probe points
+#points:
+#   50,25
+#   50,175
+#   200,175
+#   200,25
+    
+##  Gantry Corners for 300mm Build
+##  Uncomment for 300mm build
+#gantry_corners:
+#   -60,-10
+#   360,370
+##  Probe points
+#points:
+#   50,25
+#   50,225
+#   250,225
+#   250,25
+
+##  Gantry Corners for 350mm Build
+##  Uncomment for 350mm build
+gantry_corners:
+   -60,-10
+   410,420
+#  Probe points
+points:
+   50,25
+   50,275
+   300,275
+   300,25
+
+#--------------------------------------------------------------------
+speed: 100
+horizontal_move_z: 10
+retries: 5
+retry_tolerance: 0.0075
+max_adjust: 10
+
+
+
+##--------------------------------------------------------------------
+
+speed: 200
+horizontal_move_z: 10
+retries: 5
+retry_tolerance: 0.0075
+
+########################################
+# EXP1 / EXP2 (display) pins
+########################################
+
+[board_pins]
+aliases:
+    # EXP1 header
+    EXP1_1=PG9, EXP1_2=PG12,
+    EXP1_3=PG13, EXP1_4=PG14,
+    EXP1_5=PC13, EXP1_6=PC14,    # Slot in the socket on this side
+    EXP1_7=PC15, EXP1_8=PF0,
+    EXP1_9=<GND>, EXP1_10=<5V>,
+
+    # EXP2 header
+    EXP2_1=PA6, EXP2_2=PA5,
+    EXP2_3=PE2, EXP2_4=PE4,
+    EXP2_5=PE3, EXP2_6=PA7,      # Slot in the socket on this side
+    EXP2_7=PE5, EXP2_8=<RST>,
+    EXP2_9=<GND>, EXP2_10=PE4
+
+#####################################################################
+#   Displays
+#####################################################################
+
+##  Uncomment the display that you have
+#--------------------------------------------------------------------
+
+#[display]
+##  RepRapDiscount 128x64 Full Graphic Smart Controller
+#lcd_type: st7920
+#cs_pin: EXP1_4
+#sclk_pin: EXP1_5
+#sid_pin: EXP1_3
+#menu_timeout: 40
+#encoder_pins: ^EXP2_5, ^EXP2_3
+#click_pin: ^!EXP1_2
+
+#[output_pin beeper]
+#pin: EXP1_1
+
+#--------------------------------------------------------------------
+
+#[display]
+##  mini12864 LCD Display
+#lcd_type: uc1701
+#cs_pin: EXP1_3
+#a0_pin: EXP1_4
+#rst_pin: EXP1_5
+#encoder_pins: ^EXP2_5, ^EXP2_3
+#click_pin: ^!EXP1_2
+#contrast: 63
+#spi_software_miso_pin: EXP2_1
+#spi_software_mosi_pin: EXP2_6
+#spi_software_sclk_pin: EXP2_2
+
+#[neopixel btt_mini12864]
+##  To control Neopixel RGB in mini12864 display
+#pin: EXP1_6
+#chain_count: 3
+#initial_RED: 0.1
+#initial_GREEN: 0.5
+#initial_BLUE: 0.0
+#color_order: RGB
+
+##  Set RGB values on boot up for each Neopixel. 
+##  Index 1 = display, Index 2 and 3 = Knob
+#[delayed_gcode setdisplayneopixel]
+#initial_duration: 1
+#gcode:
+#        SET_LED LED=btt_mini12864 RED=1 GREEN=1 BLUE=1 INDEX=1 TRANSMIT=0
+#        SET_LED LED=btt_mini12864 RED=1 GREEN=0 BLUE=0 INDEX=2 TRANSMIT=0
+#        SET_LED LED=btt_mini12864 RED=1 GREEN=0 BLUE=0 INDEX=3 
+
+#--------------------------------------------------------------------
+
+
+#####################################################################
+#   Macros
+#####################################################################
+
+[gcode_macro G32]
+gcode:
+    SAVE_GCODE_STATE NAME=STATE_G32
+    G90
+    G28
+    QUAD_GANTRY_LEVEL
+    CLEAN_NOZZLE
+    G28
+    ##  Uncomment for for your size printer:
+    #--------------------------------------------------------------------
+    ##  Uncomment for 250mm build
+    #G0 X125 Y125 Z30 F3600
+    
+    ##  Uncomment for 300 build
+    #G0 X150 Y150 Z30 F3600
+    
+    ##  Uncomment for 350mm build
+    G0 X175 Y175 Z30 F3600
+    #--------------------------------------------------------------------
+    RESTORE_GCODE_STATE NAME=STATE_G32
+   
+[gcode_macro PRINT_START]
+#   Use PRINT_START for the slicer starting script - please customise for your slicer of choice
+gcode:
+    # Parameters
+    {% set BED_TEMP = params.BED|float %}
+    {% set EXTRUDER_TEMP = params.EXTRUDER|float %}
+
+    
+    G32                            ; home all axes
+    G90                            ; absolute positioning
+    G1 Z20 F3000                   ; move nozzle away from bed
+    M190 S{BED_TEMP}               ; set and wait for bed to reach temp
+    M109 S{EXTRUDER_TEMP}          ; set and wait for hot end to reach temp
+    LINE_PURGE
+   
+
+[gcode_macro PRINT_END]
+#   Use PRINT_END for the slicer ending script - please customise for your slicer of choice
+gcode:
+    # safe anti-stringing move coords
+    {% set th = printer.toolhead %}
+    {% set x_safe = th.position.x + 20 * (1 if th.axis_maximum.x - th.position.x > 20 else -1) %}
+    {% set y_safe = th.position.y + 20 * (1 if th.axis_maximum.y - th.position.y > 20 else -1) %}
+    {% set z_safe = [th.position.z + 2, th.axis_maximum.z]|min %}
+    
+    SAVE_GCODE_STATE NAME=STATE_PRINT_END
+    
+    M400                           ; wait for buffer to clear
+    G92 E0                         ; zero the extruder
+    G1 E-5.0 F1800                 ; retract filament
+    
+    TURN_OFF_HEATERS
+    
+    G90                                      ; absolute positioning
+    G0 X{x_safe} Y{y_safe} Z{z_safe} F20000  ; move nozzle to remove stringing
+    G0 X{th.axis_maximum.x//2} Y{th.axis_maximum.y - 2} F3600  ; park nozzle at rear
+    M107                                     ; turn off fan
+    
+    BED_MESH_CLEAR
+    RESTORE_GCODE_STATE NAME=STATE_PRINT_END
+
+
+[bed_mesh]
+mesh_min = 30, 30
+mesh_max = 270, 270
+speed = 900
+horizontal_move_z = 10
+probe_count = 7,7
+algorithm = bicubic
+##[(7x7)-1] / 2 = 24
+##[(5x5)-1] / 2 = 12
+##[(9x9)-1] / 2 = 40
+#relative_reference_index: 40
+zero_reference_position: 150, 150
+#relative_reference_index: 15
+split_delta_z = 0.0125
+move_check_distance = 3
+mesh_pps = 4,4
+fade_start = 0
+fade_end = 2
+fade_target = 0
+
+#*# <---------------------- SAVE_CONFIG ---------------------->
+#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.
+#*#
+#*# [heater_bed]
+#*# control = pid
+#*# pid_kp = 39.910
+#*# pid_ki = 2.419
+#*# pid_kd = 164.629
+#*#
+#*# [extruder]
+#*# control = pid
+#*# pid_kp = 28.480
+#*# pid_ki = 3.723
+#*# pid_kd = 54.469
+#*#
+#*# [stepper_z]
+#*# position_endstop = 0.839
+#*#
+#*# [probe]
+#*# z_offset = 1.500
+#*#
+#*# [bed_mesh default]
+#*# version = 1
+#*# points =
+#*# 	0.083005, 0.121998, 0.144661, 0.093304, 0.097727, 0.123136, 0.154970
+#*# 	0.093304, 0.109865, 0.093304, 0.075583, 0.062185, 0.088880, 0.080098
+#*# 	0.066626, 0.104305, 0.050248, 0.051783, 0.028724, 0.047341, 0.060658
+#*# 	0.038608, 0.054690, 0.044280, 0.000000, 0.001595, 0.021601, -0.001523
+#*# 	0.057751, 0.062185, 0.041516, 0.000000, -0.001451, 0.014621, 0.000000
+#*# 	0.062879, 0.088880, 0.059132, 0.035847, 0.041516, 0.020290, 0.021601
+#*# 	0.077036, 0.095458, 0.083005, 0.087743, 0.028720, 0.087743, 0.068161
+#*# x_count = 7
+#*# y_count = 7
+#*# mesh_x_pps = 4
+#*# mesh_y_pps = 4
+#*# algo = bicubic
+#*# tension = 0.2
+#*# min_x = 30.0
+#*# max_x = 270.0
+#*# min_y = 30.0
+#*# max_y = 270.0
+#*#
+#*# [probe_eddy_current btt_eddy]
+#*# reg_drive_current = 15
+#*# calibrate =
+#*# 	0.050000:3229809.905,0.090000:3229309.587,0.130000:3228708.887,
+#*# 	0.170000:3228150.117,0.210000:3227565.674,0.250000:3227085.146,
+#*# 	0.290000:3226461.335,0.330000:3225906.482,0.370000:3225347.565,
+#*# 	0.410000:3224865.355,0.450000:3224324.634,0.490000:3223775.790,
+#*# 	0.530000:3223255.153,0.570000:3222728.681,0.610000:3222264.616,
+#*# 	0.650000:3221757.634,0.690000:3221224.596,0.730000:3220739.025,
+#*# 	0.770000:3220315.120,0.810000:3219815.723,0.850000:3219347.781,
+#*# 	0.890000:3218895.724,0.930000:3218412.533,0.970000:3218023.632,
+#*# 	1.010000:3217566.131,1.050000:3217136.462,1.090000:3216700.803,
+#*# 	1.130000:3216294.513,1.170000:3215863.166,1.210000:3215496.223,
+#*# 	1.250000:3215100.065,1.290000:3214676.726,1.330000:3214284.834,
+#*# 	1.370000:3213885.561,1.410000:3213541.029,1.450000:3213185.061,
+#*# 	1.490000:3212825.976,1.530000:3212439.816,1.570000:3212089.072,
+#*# 	1.610000:3211748.657,1.650000:3211401.640,1.690000:3211081.451,
+#*# 	1.730000:3210713.819,1.770000:3210413.907,1.810000:3210082.954,
+#*# 	1.850000:3209726.654,1.890000:3209412.596,1.930000:3209132.849,
+#*# 	1.970000:3208813.925,2.010000:3208513.755,2.050000:3208223.119,
+#*# 	2.090000:3207959.660,2.130000:3207668.035,2.170000:3207391.257,
+#*# 	2.210000:3207106.780,2.250000:3206829.919,2.290000:3206589.086,
+#*# 	2.330000:3206315.188,2.370000:3206055.406,2.410000:3205831.306,
+#*# 	2.450000:3205534.181,2.490000:3205313.968,2.530000:3205082.128,
+#*# 	2.570000:3204871.369,2.610000:3204614.947,2.650000:3204387.661,
+#*# 	2.690000:3204136.087,2.730000:3203929.004,2.770000:3203696.446,
+#*# 	2.810000:3203496.315,2.850000:3203276.677,2.890000:3203062.817,
+#*# 	2.930000:3202845.812,2.970000:3202654.245,3.010000:3202451.490,
+#*# 	3.050000:3202288.121,3.090000:3202109.324,3.130000:3201882.824,
+#*# 	3.170000:3201694.241,3.210000:3201509.019,3.250000:3201321.053,
+#*# 	3.290000:3201140.621,3.330000:3200946.749,3.370000:3200773.857,
+#*# 	3.410000:3200606.894,3.450000:3200410.403,3.490000:3200281.793,
+#*# 	3.530000:3200121.710,3.570000:3199928.491,3.610000:3199779.550,
+#*# 	3.650000:3199593.222,3.690000:3199449.491,3.730000:3199278.977,
+#*# 	3.770000:3199145.721,3.810000:3198990.262,3.850000:3198840.028,
+#*# 	3.890000:3198692.728,3.930000:3198558.580,3.970000:3198426.409,
+#*# 	4.010000:3198283.201,4.050000:3198144.243
+#*#
+#*# [temperature_probe btt_eddy]
+#*# calibration_temp = 33.672759
